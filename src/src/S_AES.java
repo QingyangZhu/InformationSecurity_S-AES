@@ -1,3 +1,4 @@
+package src;
 import java.util.ArrayList;
 
 public class S_AES {
@@ -56,9 +57,7 @@ public class S_AES {
         if (array1.length != array2.length) {
             throw new IllegalArgumentException("数组长度不同！");
         }
-
         int[] resultArray = new int[array1.length];
-
         for (int i = 0; i < array1.length; i++) {
             resultArray[i] = array1[i] ^ array2[i];
         }
@@ -194,5 +193,80 @@ public class S_AES {
 
         return matrix_to_binary(ciphertext);
     }
+
+    //输入为字符串时的加密
+    public String encrypt(String plaintext, String keys){
+        StringBinaryTransfer sb = new StringBinaryTransfer();
+        int [] key = sb.intStringToBinary(keys);
+                //先将字符串转化为16位二进制数的列表
+        ArrayList<int []> plaintext_list = sb.SBTransfer(plaintext);
+        ArrayList<int []> ciphertext_list = new ArrayList<>();
+        for (int [] p: plaintext_list){
+            int [] temp = encrypt(p,key);
+            ciphertext_list.add(temp);
+        }
+
+        return sb.BSTransfer(ciphertext_list);
+    }
+
+    //输入为字符串时的解密
+    public String decrypt(String ciphertext,String keys){
+        StringBinaryTransfer sb = new StringBinaryTransfer();
+        int [] key = sb.intStringToBinary(keys);
+        ArrayList<int []> ciphertext_list = sb.SBTransfer(ciphertext);
+        ArrayList<int []> plaintext_list = new ArrayList<>();
+        for(int [] c: ciphertext_list){
+            int [] temp = decrypt(c,key);
+            plaintext_list.add(temp);
+        }
+        return sb.BSTransfer(plaintext_list);
+    }
+
+    //双重加密，key为32位密钥，key = key1+key2，先用key1加密，再使用key2加密
+    public int [] double_encrypt(int [] plaintext, int [] key){
+        int [] key1 = new int[16];
+        int [] key2 = new int[16];
+        System.arraycopy(key,0,key1,0,16);
+        System.arraycopy(key,16,key2,0,16);
+        //第一轮加密
+        int [] temp_ciphertext = encrypt(plaintext,key1);
+        //第二轮加密
+        return encrypt(temp_ciphertext,key2);
+    }
+
+    public int [] double_decrypt(int [] ciphertext, int [] key){
+        int [] key1 = new int[16];
+        int [] key2 = new int[16];
+        System.arraycopy(key,0,key1,0,16);
+        System.arraycopy(key,16,key2,0,16);
+        int [] temp_plaintext = decrypt(ciphertext,key2);
+        return  decrypt(temp_plaintext,key1);
+    }
+
+    //三重加密，key变成48位分组密钥，key = key1+key2+key3，先用key1加密，再使用key2加密，最后使用key3加密
+    public int [] triple_encrypt(int [] plaintext, int [] key){
+        int [] key1 = new int[16];
+        int [] key2 = new int[16];
+        int [] key3 = new int[16];
+        System.arraycopy(key,0,key1,0,16);
+        System.arraycopy(key,16,key2,0,16);
+        System.arraycopy(key,32,key3,0,16);
+        int [] temp_ciphertext = encrypt(plaintext,key1);
+        int [] temp_temp_ciphertext = encrypt(temp_ciphertext,key2);
+        return encrypt(temp_temp_ciphertext,key3);
+    }
+
+    public int [] triple_decrypt(int [] ciphertext, int [] key){
+        int [] key1 = new int[16];
+        int [] key2 = new int[16];
+        int [] key3 = new int[16];
+        System.arraycopy(key,0,key1,0,16);
+        System.arraycopy(key,16,key2,0,16);
+        System.arraycopy(key,32,key3,0,16);
+        int [] temp_plaintext = decrypt(ciphertext,key3);
+        int [] temp_temp_plaintext = decrypt(temp_plaintext,key2);
+        return decrypt(temp_temp_plaintext,key1);
+    }
+
 
 }
